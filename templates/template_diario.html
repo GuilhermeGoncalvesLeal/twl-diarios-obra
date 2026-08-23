@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Diário de Obra - TWL</title>
+  <style>
+    /* Configuração da Página A4 */
+    @page {
+      size: A4 portrait;
+      margin: 15mm 12mm 15mm 12mm;
+      @bottom-left {
+        content: "TWL Engenharia & Construção — Confidencial";
+        font-size: 8pt;
+        color: #718096;
+      }
+      @bottom-right {
+        content: "Página " counter(page) " de " counter(pages);
+        font-size: 8pt;
+        color: #718096;
+      }
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      font-size: 10pt;
+      line-height: 1.4;
+    }
+
+    /* Cabeçalho */
+    .header {
+      border-bottom: 2px solid #1a365d;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      display: flex; /* Nota: O Weasyprint suporta Flexbox básico */
+      justify-content: space-between;
+    }
+    
+    .logo-text {
+      font-size: 24pt;
+      font-weight: bold;
+      color: #1a365d;
+      margin: 0;
+    }
+
+    .title {
+      text-align: right;
+    }
+    .title h2 { margin: 0; color: #2b6cb0; font-size: 14pt;}
+    .title p { margin: 2px 0 0 0; font-size: 9pt; color: #666;}
+
+    /* Secções de Informação */
+    .section-title {
+      background-color: #f0f4f8;
+      color: #1a365d;
+      padding: 5px 10px;
+      font-weight: bold;
+      border-left: 4px solid #2b6cb0;
+      margin-top: 15px;
+      margin-bottom: 10px;
+    }
+
+    /* Tabelas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: left;
+    }
+    th {
+      background-color: #e2e8f0;
+      font-size: 9pt;
+    }
+    td { font-size: 9pt; }
+
+    /* Fotografias */
+    .photo-container {
+      width: 48%;
+      display: inline-block;
+      margin-bottom: 15px;
+      vertical-align: top;
+    }
+    .photo-container img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border: 1px solid #ccc;
+    }
+    .caption {
+      font-size: 8pt;
+      background: #f9f9f9;
+      padding: 4px;
+      border: 1px solid #ccc;
+      border-top: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <h1 class="logo-text">TWL</h1>
+      <span style="font-size: 8pt;">ENGENHARIA E CONSTRUÇÃO</span>
+    </div>
+    <div class="title">
+      <h2>DIÁRIO DE OBRA</h2>
+      <p>Nº <strong>{{ relatorio_num }}</strong> | Data: <strong>{{ data }}</strong></p>
+    </div>
+  </div>
+
+  <div class="section-title">1. DADOS DA OBRA</div>
+  <table>
+    <tr>
+      <th>Obra / Projeto:</th>
+      <td><strong>{{ obra_nome }}</strong></td>
+      <th>Código:</th>
+      <td>{{ cod_obra }}</td>
+    </tr>
+    <tr>
+      <th>Diretor de Obra:</th>
+      <td>{{ diretor_obra }}</td>
+      <th>Clima:</th>
+      <td>{{ meteorologia }}</td>
+    </tr>
+  </table>
+
+  <div class="section-title">2. TRABALHOS EM CURSO</div>
+  <p style="white-space: pre-line; font-size: 9pt; margin: 5px 0;">{{ resumo_trabalhos }}</p>
+
+  <div class="section-title">3. REGISTO FOTOGRÁFICO</div>
+  <div>
+    {% for foto in fotos %}
+    <div class="photo-container">
+      <!-- O src receberá a imagem em Base64 gerada pelo Python -->
+      <img src="{{ foto.imagem_base64 }}" alt="Progresso">
+      <div class="caption"><strong>{{ foto.legenda }}</strong></div>
+    </div>
+    {% endfor %}
+  </div>
+
+</body>
+</html>
