@@ -26,86 +26,91 @@ if logo_b64:
         unsafe_allow_html=True
     )
 
-# --- 2. INJEÇÃO DE ESTILO CSS (INSPIRADO NO PINTEREST) ---
+# --- 2. INJEÇÃO DE ESTILO CSS (CORREÇÃO DE CORES E TEXTOS) ---
 st.markdown("""
     <style>
-    /* Esconder cabeçalho e rodapé do Streamlit */
+    /* Esconder UI do Streamlit */
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
     footer {visibility: hidden;}
 
     /* Fundo Global Cinza Claro */
     .stApp {
-        background-color: #F2F4F7;
+        background-color: #F2F4F7 !important;
     }
 
-    /* Títulos Principais mais modernos e pesados */
-    h1 {
+    /* FORÇAR COR DO TEXTO A ESCURO (Contorna o Dark Mode do Telemóvel) */
+    p, div, span, label {
+        color: #333333 !important;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        color: #111111 !important;
         font-weight: 800 !important;
-        letter-spacing: -1.5px !important;
-        color: #111111 !important;
-        margin-bottom: 0px !important;
-    }
-    h3 {
-        font-weight: 700 !important;
-        letter-spacing: -0.5px !important;
-        color: #111111 !important;
+        letter-spacing: -1px !important;
     }
 
-    /* Cartões de Métrica Arredondados e Brancos */
+    /* Cartões de Métrica */
     [data-testid="stMetric"] {
-        background-color: #FFFFFF;
-        padding: 20px;
-        border-radius: 24px;
-        box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.04);
+        background-color: #FFFFFF !important;
+        padding: 20px !important;
+        border-radius: 24px !important;
+        box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.04) !important;
     }
-    [data-testid="stMetricValue"] {
+    [data-testid="stMetricValue"] > div {
         font-size: 2.2rem !important;
         font-weight: 700 !important;
         color: #111111 !important;
     }
+    [data-testid="stMetricLabel"] > div > p {
+        color: #666666 !important;
+        font-weight: 600 !important;
+    }
 
-    /* Personalização do Cartão da Obra (usando a borda nativa do Streamlit) */
+    /* Cartão da Obra */
     [data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #FFFFFF !important;
         border-radius: 32px !important;
         border: none !important;
-        box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.04) !important;
-        padding: 15px !important;
-        margin-bottom: 15px !important;
+        box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.05) !important;
+        padding: 20px !important;
+        margin-bottom: 20px !important;
     }
 
-    /* Botões estilo Pílula (Escuros e Redondos) */
+    /* Botões estilo Pílula (Proteger o texto para ficar branco) */
     .stButton > button {
         background-color: #161616 !important;
-        color: #FFFFFF !important;
         border-radius: 40px !important;
         border: none !important;
         padding: 10px 24px !important;
-        font-weight: 600 !important;
         width: 100%;
         transition: all 0.3s ease;
+    }
+    .stButton > button * {
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
     }
     .stButton > button:hover {
         background-color: #333333 !important;
         transform: scale(1.02);
     }
 
-    /* Barra de progresso preta fina */
+    /* Barra de progresso preta */
     .stProgress > div > div > div > div {
-        background-color: #161616;
-        border-radius: 10px;
+        background-color: #161616 !important;
+        border-radius: 10px !important;
     }
 
-    /* Imagens com cantos arredondados */
+    /* Arredondar imagens */
     img {
-        border-radius: 20px;
+        border-radius: 16px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. DADOS E LÓGICA (MANTIDO INTACTO) ---
-IMAGEM_PLACEHOLDER = "https://images.unsplash.com/photo-1541888946425-d0fbb1861593?w=600&auto=format&fit=crop&q=80"
+# --- 3. DADOS E LÓGICA ---
+# Novo placeholder mais estável (caso a Unsplash bloqueie)
+IMAGEM_PLACEHOLDER = "https://placehold.co/600x400/eeeeee/111111.png?text=TWL+Em+Obra"
 NOME_ABA = "Folha1"
 
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -136,7 +141,7 @@ def resolver_imagem(url):
 # --- 4. INTERFACE ---
 st.markdown("<h1>TWL Obras</h1>", unsafe_allow_html=True)
 st.caption("Visão Geral do Portfólio")
-st.write("") # Espaçamento
+st.write("") 
 
 @st.dialog("Nova Obra")
 def modal_nova_obra():
@@ -192,7 +197,6 @@ if df_obras.empty:
     st.info("Nenhuma obra registada. Adicione a primeira obra.")
 else:
     for _, obra in df_obras.iterrows():
-        # Usamos border=True para o CSS capturar o class do cartão
         with st.container(border=True):
             col_img, col_info, col_acao = st.columns([1.5, 2, 1])
             
@@ -207,7 +211,7 @@ else:
                 st.caption(f"{prog_val}% concluído — {obra['Estado']}")
                 
             with col_acao:
-                st.write("") # Empurrar o botão mais para o meio
+                st.write("")
                 st.write("")
                 if st.button("Diário", key=f"btn_{obra['Código']}"):
                     st.session_state["obra_selecionada"] = obra.to_dict()
