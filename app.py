@@ -7,7 +7,7 @@ st.set_page_config(page_title="TWL - Portal de Obra", page_icon="🏢", layout="
 st.title("🏢 TWL Engenharia & Construção")
 st.subheader("Visão Geral das Obras (Dashboard)")
 
-# 1. Simulação de base de dados das obras ativas
+# 1. Base de dados das obras ativas
 dados_obras = {
     "Código": ["TWL-2026-01", "TWL-2026-02", "TWL-2026-03"],
     "Obra": ["Edifício Sede Boavista", "Reabilitação Baixa", "Loteamento Sul"],
@@ -41,7 +41,6 @@ for index, obra in df_obras.iterrows():
             st.progress(obra['Progresso'] / 100)
             st.caption(f"Progresso: {obra['Progresso']}% - {obra['Estado']}")
         with colC:
-            # NOVO: O botão que redireciona automaticamente para o formulário
-            if st.button(f"Gerar Diário", key=f"btn_{obra['Código']}"):
-                st.switch_page("pages/1_Novo_Diario.py")
+            # Botão de navegação nativo e direto
+            st.page_link("pages/1_Novo_Diario.py", label="Gerar Diário", icon="✍️")
         st.divider()
