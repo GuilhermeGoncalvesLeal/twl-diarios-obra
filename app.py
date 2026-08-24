@@ -44,7 +44,5 @@ for index, obra in df_obras.iterrows():
         with colC:
             # Botão de ação
             if st.button(f"Gerar Diário", key=f"btn_{obra['Código']}"):
-                # No Streamlit, navegar programaticamente ainda é complexo, 
-                # a melhor prática é instruir o user a clicar no menu lateral.
-                st.info("👈 Use o menu lateral 'Novo Diário' para preencher os dados desta obra.")
-        st.divider()
+    st.switch_page("pages/1_Novo_Diario.py")
+
