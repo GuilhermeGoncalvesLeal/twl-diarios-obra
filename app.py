@@ -5,19 +5,34 @@ from streamlit_gsheets import GSheetsConnection
 # Configuração global da página
 st.set_page_config(page_title="TWL - Portal de Obra", page_icon="🏢", layout="wide")
 
+# Imagem padrão para obras sem fotografia definida
+IMAGEM_PADRAO = "https://images.unsplash.com/photo-1541888946425-d0fbb1861593?w=600"
+
 # Ligação à Base de Dados Google Sheets
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def carregar_dados():
-    # ttl=0 garante que lê sempre os dados mais recentes sem cache presa
-    return conn.read(ttl=0)
+    try:
+        df = conn.read(ttl=0)
+        if df is None or df.empty:
+            return pd.DataFrame(columns=["Código", "Obra", "Diretor", "Progresso", "Estado", "Imagem"])
+        # Limpeza de dados para prevenir erros de tipos nulos
+        df["Código"] = df["Código"].fillna("SEM-COD").astype(str)
+        df["Obra"] = df["Obra"].fillna("Obra sem nome").astype(str)
+        df["Diretor"] = df["Diretor"].fillna("Não atribuído").astype(str)
+        df["Progresso"] = pd.to_numeric(df["Progresso"], errors="coerce").fillna(0).astype(int)
+        df["Estado"] = df["Estado"].fillna("No Prazo").astype(str)
+        df["Imagem"] = df["Imagem"].fillna(IMAGEM_PADRAO).astype(str)
+        return df
+    except Exception:
+        return pd.DataFrame(columns=["Código", "Obra", "Diretor", "Progresso", "Estado", "Imagem"])
 
 df_obras = carregar_dados()
 
 st.title("🏢 TWL Engenharia & Construção")
 st.subheader("Visão Geral das Obras (Dashboard)")
 
-# Modal / Janela para criação de nova obra
+# Modal para registar nova obra
 @st.dialog("➕ Registar Nova Obra")
 def modal_nova_obra():
     with st.form("form_nova_obra"):
@@ -26,30 +41,30 @@ def modal_nova_obra():
         novo_diretor = st.text_input("Diretor de Obra Responsável", placeholder="Eng. João Santos")
         novo_progresso = st.slider("Progresso Inicial (%)", 0, 100, 0)
         novo_estado = st.selectbox("Estado", ["No Prazo", "Atrasado", "Na Reta Final"])
-        nova_img = st.text_input("URL da Imagem de Capa", value="https://images.unsplash.com/photo-1541888946425-d0fbb1861593?w=600")
+        nova_img = st.text_input("URL da Imagem de Capa", value=IMAGEM_PADRAO)
         
         btn_gravar = st.form_submit_button("Guardar Obra na Base de Dados", type="primary")
         
         if btn_gravar:
-            if not novo_cod or not novo_nome:
+            if not novo_cod.strip() or not novo_nome.strip():
                 st.error("Por favor, preencha o código e o nome da obra.")
             else:
+                img_final = nova_img.strip() if nova_img.strip() else IMAGEM_PADRAO
                 nova_linha = pd.DataFrame([{
-                    "Código": novo_cod,
-                    "Obra": novo_nome,
-                    "Diretor": novo_diretor,
+                    "Código": novo_cod.strip(),
+                    "Obra": novo_nome.strip(),
+                    "Diretor": novo_diretor.strip(),
                     "Progresso": int(novo_progresso),
                     "Estado": novo_estado,
-                    "Imagem": nova_img
+                    "Imagem": img_final
                 }])
                 
-                # Junta a nova linha e atualiza a folha Google
                 df_atualizado = pd.concat([df_obras, nova_linha], ignore_index=True)
                 conn.update(data=df_atualizado)
                 st.success("Obra registada com sucesso!")
                 st.rerun()
 
-# Barra Superior com Métricas e Botão de Ação
+# Barra Superior de Métricas
 col_btn, col_m1, col_m2, col_m3 = st.columns([2, 1, 1, 1])
 
 with col_btn:
@@ -67,7 +82,7 @@ with col_m3:
 
 st.divider()
 
-# Listagem Dinâmica das Obras
+# Listagem das Obras
 st.markdown("### Obras em Curso")
 
 if df_obras.empty:
@@ -78,7 +93,8 @@ else:
             col_img, col_info, col_prog, col_acao = st.columns([1.5, 2, 2, 1])
             
             with col_img:
-                st.image(obra["Imagem"], use_container_width=True)
+                url_foto = obra["Imagem"] if isinstance(obra["Imagem"], str) and obra["Imagem"].startswith("http") else IMAGEM_PADRAO
+                st.image(url_foto, use_container_width=True)
                 
             with col_info:
                 st.markdown(f"**{obra['Obra']}**")
