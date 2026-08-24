@@ -2,15 +2,31 @@ import streamlit as st
 import pandas as pd
 from streamlit_gsheets import GSheetsConnection
 from PIL import Image
+import base64
+import os
 
-# Proteção: Tenta carregar o logo. Se não existir, usa um emoji padrão.
-try:
+# 1. Carregar e processar o logótipo oficial
+icone_pagina = "🏢"
+logo_b64 = ""
+if os.path.exists("logo.png"):
     icone_pagina = Image.open("logo.png")
-except FileNotFoundError:
-    icone_pagina = "🏢"
+    with open("logo.png", "rb") as img_f:
+        logo_b64 = base64.b64encode(img_f.read()).decode()
 
-# Configuração global da página
+# Configuração da aba e cabeçalhos Web
 st.set_page_config(page_title="TWL - Portal de Obra", page_icon=icone_pagina, layout="wide")
+
+# Força o navegador mobile a reconhecer o logótipo da TWL para o ecrã inicial
+if logo_b64:
+    st.markdown(
+        f"""
+        <head>
+            <link rel="apple-touch-icon" href="data:image/png;base64,{logo_b64}">
+            <link rel="icon" type="image/png" href="data:image/png;base64,{logo_b64}">
+        </head>
+        """,
+        unsafe_allow_html=True
+    )
 
 # Imagem Placeholder para obras sem fotografia
 IMAGEM_PLACEHOLDER = "https://images.unsplash.com/photo-1541888946425-d0fbb1861593?w=600&auto=format&fit=crop&q=80"
