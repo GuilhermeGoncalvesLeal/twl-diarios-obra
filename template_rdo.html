@@ -45,14 +45,18 @@
     <div class="seccao">
         <h2>Registro Fotográfico ({{ num_fotos }})</h2>
         <div class="grelha-fotos">
+            <!-- Criar um contador independente que funciona em qualquer versão do Jinja2 -->
+            {% set contador = namespace(fig=1) %}
+            
             <!-- Ciclo lógico que cria linhas com 2 fotos cada -->
             {% for linha in fotos | batch(2) %}
             <div class="linha-fotos">
                 {% for foto in linha %}
                 <div class="celula-foto">
                     <img src="{{ foto.caminho }}">
-                    <!-- Correção da matemática da indexação aqui: -->
-                    <p>Figura {{ loop.index + (loop.parent.index0 * 2) }} - {{ foto.legenda }}</p>
+                    <p>Figura {{ contador.fig }} - {{ foto.legenda }}</p>
+                    <!-- Somar 1 ao contador após cada foto -->
+                    {% set contador.fig = contador.fig + 1 %}
                 </div>
                 {% endfor %}
             </div>
