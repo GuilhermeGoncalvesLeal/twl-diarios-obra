@@ -1,67 +1,59 @@
 import os
-import base64
+import qrcode
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML
+from weasyprint import HTML, CSS
+from datetime import datetime
 
-def image_to_base64(image_path):
-    """Lê uma imagem e converte para base64 para injetar no HTML."""
-    if os.path.exists(image_path):
-        with open(image_path, "rb") as img_file:
-            encoded = base64.b64encode(img_file.read()).decode('utf-8')
-            ext = os.path.splitext(image_path)[1].replace('.', '')
-            # Normalizar extensões jpg para jpeg
-            if ext.lower() == 'jpg':
-                ext = 'jpeg'
-            return f"data:image/{ext};base64,{encoded}"
-    return ""
+def gerar_qr_code(url, caminho_saida="qr_code.png"):
+    """Gera um QR code que aponta para o site da TWL"""
+    qr = qrcode.QRCode(version=1, box_size=10, border=0)
+    qr.add_data(url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(caminho_saida)
+    return caminho_saida
 
-def gerar_pdf(dados_diario, output_filename="Diario_Obra_Teste.pdf"):
-    print("A iniciar a geração do PDF...")
+def gerar_pdf(dados, output_filename="Diario_Obra.pdf"):
+    # 1. Gerar o QR code atualizado
+    caminho_qr = gerar_qr_code("https://www.twl-construcao.pt")
     
-    # 1. Configurar o Jinja2 para ler os templates da pasta correta
-    env = Environment(loader=FileSystemLoader('templates'))
-    template = env.get_template('template_diario.html')
+    # 2. Configurar o ambiente Jinja2 (HTML)
+    env = Environment(loader=FileSystemLoader('.'))
+    template = env.get_template('template_rdo.html')
     
-    # 2. Processar as fotos do dicionário de dados, convertendo para Base64
-    for foto in dados_diario.get('fotos', []):
-        if 'caminho' in foto:
-            foto['imagem_base64'] = image_to_base64(foto['caminho'])
-        else:
-            foto['imagem_base64'] = ""
+    # 3. Tratamento das Imagens da Obra
+    fotos = dados.get("fotos", [])
+    num_fotos = len(fotos)
+    
+    # Define a foto de capa (se não houver fotos na app, usa a default)
+    if num_fotos > 0:
+        foto_capa = fotos[0]["caminho"]
+    else:
+        foto_capa = "https://images.unsplash.com/photo-1541888946425-d0fbb1861593?w=800"
 
-    # 3. Injetar os dados no HTML (Jinja2 render)
-    html_out = template.render(dados_diario)
-    
-    # (Opcional) Guardar o HTML gerado para debug
-    with open("temp_debug.html", "w", encoding="utf-8") as f:
-        f.write(html_out)
-        
-    # 4. Converter o HTML renderizado em PDF usando o WeasyPrint
-    try:
-        print("A converter HTML para PDF com WeasyPrint...")
-        HTML(string=html_out).write_pdf(output_filename)
-        print(f"SUCESSO! PDF guardado como: {output_filename}")
-    except Exception as e:
-        print(f"ERRO ao gerar PDF: {e}")
+    # Preparar hora atual
+    hora_atual = datetime.now().strftime("%H:%Mh")
 
-# ==========================================
-# TESTE DO MOTOR: DADOS FALSOS
-# ==========================================
-if __name__ == "__main__":
-    # Vamos criar dados falsos simulando o preenchimento do Diretor de Obra
-    dados_teste = {
-        "relatorio_num": "001",
-        "data": "23/08/2026",
-        "obra_nome": "Edifício Sede Boavista",
-        "cod_obra": "TWL-2026-01",
-        "diretor_obra": "Eng. Guilherme Leal",
-        "meteorologia": "Sol / 25ºC",
-        "resumo_trabalhos": "Conclusão da cofragem dos pilares do Piso 1.\nInício das armaduras da laje.\nLimpeza geral do estaleiro no final do dia.",
-        "fotos": [
-            # NOTA: O script não vai falhar se a imagem não existir, apenas não mostra a foto.
-            {"caminho": "assets/foto_teste.jpg", "legenda": "Cofragem Piso 1 concluída."},
-        ]
-    }
+    # 4. Renderizar o HTML preenchido com as variáveis da App
+    html_out = template.render(
+        data=dados.get("data", ""),
+        hora=hora_atual,
+        nome_obra=dados.get("obra_nome", "Obra Não Definida"),
+        localizacao="Localização em Base de Dados", # Podes adicionar este campo no app.py dps
+        diretor_obra=dados.get("diretor_obra", "Eng. Guilherme Leal"),
+        resumo_trabalhos=dados.get("resumo_trabalhos", "Sem trabalhos registados hoje."),
+        fotos=fotos,
+        num_fotos=num_fotos,
+        foto_capa=foto_capa,
+        qr_code_path=os.path.abspath(caminho_qr),
+        # Precisarás de ter as imagens na pasta assets
+        logo_pequeno=os.path.abspath("assets/logo_twl_pequeno.png"),
+        logo_grande_branco=os.path.abspath("assets/logo_twl_grande_branco.png")
+    )
     
-    # Executar a função
-    gerar_pdf(dados_teste)
+    # 5. Converter para PDF com WeasyPrint
+    base_url = os.path.dirname(os.path.abspath(__file__))
+    HTML(string=html_out, base_url=base_url).write_pdf(
+        output_filename, 
+        stylesheets=[CSS('estilo_rdo.css')]
+    )
