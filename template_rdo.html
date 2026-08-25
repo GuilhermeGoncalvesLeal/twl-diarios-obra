@@ -8,7 +8,7 @@
     <!-- PÁGINA 1: CAPA -->
     <div class="pagina-capa">
         <div class="bloco-texto-capa">
-            <!-- Podes apontar para o URL gerado no Python ou usar um estático -->
+            <!-- QR Code dinâmico -->
             <img src="{{ qr_code_path }}" class="qr-code">
             
             <h1 class="titulo-capa">Relatório<br>Diário de Obra</h1>
@@ -27,7 +27,7 @@
             </div>
         </div>
         
-        <!-- A foto de capa é a 1ª foto anexada, ou uma padrão -->
+        <!-- A foto de capa é a 1ª foto anexada -->
         <img src="{{ foto_capa }}" class="foto-capa">
     </div>
 
@@ -35,7 +35,6 @@
     <div style="page-break-before: always;"></div>
 
     <!-- PÁGINAS INTERIORES -->
-    <!-- Logótipo no topo das páginas interiores -->
     <img src="{{ logo_pequeno }}" class="cabecalho-logo">
 
     <div class="seccao">
@@ -52,7 +51,8 @@
                 {% for foto in linha %}
                 <div class="celula-foto">
                     <img src="{{ foto.caminho }}">
-                    <p>Figura {{ loop.index + (loop.parent.loop.index0 * 2) }} - {{ foto.legenda }}</p>
+                    <!-- Correção da matemática da indexação aqui: -->
+                    <p>Figura {{ loop.index + (loop.parent.index0 * 2) }} - {{ foto.legenda }}</p>
                 </div>
                 {% endfor %}
             </div>
