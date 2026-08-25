@@ -4,3 +4,4 @@ jinja2
 pillow
 pandas
 st-gsheets-connection
+qrcode
