@@ -2,14 +2,24 @@
 Acesso ao Google Drive — imagens de capa das obras, e armazenamento dos PDFs
 de RDO gerados.
 
-Espera em st.secrets:
-    [gcp_service_account]   -> mesmo JSON usado em sheets.py
-    [twl]
-    drive_root_folder_id = "..." -> ID da pasta raiz "TWL_Obras" no Drive
+IMPORTANTE: usa autenticação OAuth do UTILIZADOR (não a conta de serviço).
+Contas de serviço têm 0 bytes de quota própria no Drive, por isso qualquer
+upload de ficheiro binário (fotos, PDFs) falha com "storageQuotaExceeded" —
+isto é uma limitação do Google, não um bug. Como a tua conta é Gmail pessoal
+(sem Shared Drives), a forma correta é a app escrever em teu nome. Ver
+get_oauth_refresh_token.py para gerar as credenciais uma única vez.
 
-IMPORTANTE: a pasta raiz (e a spreadsheet, em sheets.py) têm de estar
-partilhadas com o "client_email" da service account (permissão de Editor),
-senão a API devolve 404/403.
+Espera em st.secrets:
+    [gcp_oauth_user]
+    client_id = "..."
+    client_secret = "..."
+    refresh_token = "..."
+
+    [twl]
+    drive_root_folder_id = "..." -> ID da pasta "TWL_Obras" no teu Drive
+
+Como agora é a tua própria conta a escrever, já NÃO precisas de partilhar a
+pasta TWL_Obras com nenhuma conta de serviço — é simplesmente tua.
 
 Organização criada automaticamente pela app dentro da pasta raiz:
 
@@ -21,7 +31,7 @@ Organização criada automaticamente pela app dentro da pasta raiz:
 import io
 
 import streamlit as st
-from google.oauth2.service_account import Credentials
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 
@@ -30,16 +40,20 @@ SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 @st.cache_resource
 def _service():
-    creds = Credentials.from_service_account_info(
-        st.secrets["gcp_service_account"], scopes=SCOPES
+    creds = Credentials(
+        None,
+        refresh_token=st.secrets["gcp_oauth_user"]["refresh_token"],
+        client_id=st.secrets["gcp_oauth_user"]["client_id"],
+        client_secret=st.secrets["gcp_oauth_user"]["client_secret"],
+        token_uri="https://oauth2.googleapis.com/token",
+        scopes=SCOPES,
     )
     return build("drive", "v3", credentials=creds)
 
 
 @st.cache_data(ttl=300)
 def download_file_bytes(file_id: str) -> bytes:
-    """Descarrega um ficheiro (ex: imagem de capa) diretamente pela API —
-    não depende do ficheiro estar público."""
+    """Descarrega um ficheiro (ex: imagem de capa) diretamente pela API."""
     request = _service().files().get_media(fileId=file_id)
     buf = io.BytesIO()
     downloader = MediaIoBaseDownload(buf, request)
