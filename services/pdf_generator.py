@@ -115,8 +115,11 @@ def _draw_image_cover(c, img_bytes, x0, y0_td, x1, y1_td):
 
 
 def _draw_vector(c, filename, x0, y0_td, x1, y1_td):
+    # Fundo sólido embutido na própria imagem (sem canal alfa) — evita um bug
+    # de renderização do Firefox/PDF.js com máscaras de transparência que
+    # invertia visualmente o logo nalguns visualizadores.
     path = os.path.join(VECTOR_DIR, filename)
-    c.drawImage(ImageReader(path), x0, _y(y1_td), width=x1 - x0, height=y1_td - y0_td, mask="auto")
+    c.drawImage(ImageReader(path), x0, _y(y1_td), width=x1 - x0, height=y1_td - y0_td)
 
 
 def _draw_text(c, text, x, y_baseline_td, font, size, fill=BLACK):
@@ -139,6 +142,30 @@ def _wrap_text(c, text, font, size, max_width):
     if current:
         lines.append(current)
     return lines or [""]
+
+
+def _draw_justified_paragraph(c, text, x, y_start_td, font, size, max_width, line_height):
+    """Desenha um parágrafo justificado (alinhado à esquerda E à direita),
+    como o texto de um jornal. A última linha do parágrafo fica alinhada só
+    à esquerda, como é convenção tipográfica normal."""
+    lines = _wrap_text(c, text, font, size, max_width)
+    c.setFont(font, size)
+    c.setFillColorRGB(*BLACK)
+    y = y_start_td
+    for i, line in enumerate(lines):
+        words = line.split()
+        is_last_line = (i == len(lines) - 1)
+        if is_last_line or len(words) == 1:
+            c.drawString(x, _y(y), line)
+        else:
+            words_width = sum(c.stringWidth(w, font, size) for w in words)
+            extra_space = (max_width - words_width) / (len(words) - 1)
+            cx = x
+            for w in words:
+                c.drawString(cx, _y(y), w)
+                cx += c.stringWidth(w, font, size) + extra_space
+        y += line_height
+    return y
 
 
 def _header(c):
@@ -214,11 +241,7 @@ def _page_atividades(c, resumo, total_fotos, first_chunk):
     c.setFillColorRGB(*BLACK)
     c.drawString(33.4, _y(140.0), "Atividades Realizadas")
 
-    lines = _wrap_text(c, resumo, SANS_LIGHT, 13.56, CONTENT_W)
-    y = 182.0
-    for line in lines:
-        _draw_text(c, line, 32.56, y, SANS_LIGHT, 13.56)
-        y += 17.5
+    y = _draw_justified_paragraph(c, resumo, 32.56, 182.0, SANS_LIGHT, 13.56, CONTENT_W, 17.5)
 
     title_baseline = y + 60.0
     c.setFont(SERIF, 25.55)
@@ -230,11 +253,11 @@ def _page_atividades(c, resumo, total_fotos, first_chunk):
     _footer(c)
 
 
-def _page_registro_continuacao(c, chunk, start_index):
+def _page_registro_continuacao(c, chunk, start_index, total_fotos):
     _header(c)
     c.setFont(SERIF, 25.55)
     c.setFillColorRGB(*BLACK)
-    c.drawString(32.15, _y(141.0), "Registro Fotográfico")
+    c.drawString(32.15, _y(141.0), f"Registro Fotográfico ({total_fotos})")
     _photo_grid(c, chunk, start_index, CONTINUATION_GRID_TOP)
     _footer(c)
 
@@ -268,7 +291,7 @@ def generate_rdo_pdf(obra: dict, rdo: dict, photos: list) -> bytes:
     idx = 4
     while remaining:
         chunk, remaining = remaining[:4], remaining[4:]
-        _page_registro_continuacao(c, chunk, idx)
+        _page_registro_continuacao(c, chunk, idx, len(photos))
         c.showPage()
         idx += 4
 
