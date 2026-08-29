@@ -8,8 +8,11 @@ Navegação implementada via st.session_state (sem multipage nativo), para
 poder passar a obra selecionada entre "páginas" sem depender de query params.
 """
 from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 import streamlit as st
+
+LISBOA = ZoneInfo("Europe/Lisbon")
 
 from services import drive, sheets
 from services.pdf_generator import generate_rdo_pdf
@@ -185,7 +188,7 @@ def view_gerar_rdo():
                 obra=obra_pdf,
                 rdo={
                     "data": data_rdo.strftime("%d/%m/%Y"),
-                    "hora": datetime.now().strftime("%H:%M"),
+                    "hora": datetime.now(LISBOA).strftime("%H:%M"),
                     "referencia": referencia,
                     "resumo": resumo,
                     "responsavel_nome": resp["nome_completo"],
