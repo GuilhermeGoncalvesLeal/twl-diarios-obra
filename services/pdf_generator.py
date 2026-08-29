@@ -265,8 +265,11 @@ def _page_registro_continuacao(c, chunk, start_index, total_fotos):
 def _page_contracapa(c):
     c.setFillColorRGB(0, 0, 0)
     c.rect(0, 0, PAGE_W, PAGE_H, fill=1, stroke=0)
+    # Calcular aspect ratio a partir das dimensões reais da imagem
+    img = Image.open(os.path.join(VECTOR_DIR, "logo_white.png"))
+    img_w, img_h = img.size
     logo_w = 200.0
-    logo_h = logo_w * (142.92 / 417.32)
+    logo_h = logo_w * (img_h / img_w)
     x0 = (PAGE_W - logo_w) / 2
     y0_td = (PAGE_H - logo_h) / 2
     _draw_vector(c, "logo_white.png", x0, y0_td, x0 + logo_w, y0_td + logo_h)
