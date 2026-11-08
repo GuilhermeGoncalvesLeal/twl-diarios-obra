@@ -2,12 +2,14 @@
 TWL Obras — app Streamlit.
 
 Fluxo:
-    Dashboard (obras ativas)  -->  Painel de obra  -->  Gerador de RDO
+    Login (Google OAuth) --> Verificação de Perfil (Google Sheets) -->
+    Dashboard (obras ativas) --> Painel de obra --> Gerador de RDO
 
 Navegação implementada via st.session_state (sem multipage nativo), para
 poder passar a obra selecionada entre "páginas" sem depender de query params.
 """
 from datetime import date, datetime
+import os
 from zoneinfo import ZoneInfo
 
 import streamlit as st
@@ -66,12 +68,114 @@ def build_referencia(iniciais, codigo_obra, data_rdo):
 
 
 # ---------------------------------------------------------------------------
+# Autenticação e Perfis
+# ---------------------------------------------------------------------------
+def check_authentication():
+    """
+    Verifica se o utilizador está autenticado via Google (st.login) e
+    se possui um perfil ativo e autorizado na folha 'Utilizadores'.
+    """
+    has_auth_config = "auth" in st.secrets
+
+    if has_auth_config:
+        is_logged_in = getattr(st.user, "is_logged_in", False)
+        if not is_logged_in:
+            return None, "login_required"
+        user_email = getattr(st.user, "email", None)
+        user_name = getattr(st.user, "name", None) or (user_email.split("@")[0] if user_email else "")
+    else:
+        # Fallback de desenvolvimento local se [auth] ainda não estiver em secrets.toml
+        user_email = "guilhermeleal.me@gmail.com"
+        user_name = "Guilherme Leal"
+
+    profile = sheets.get_user_profile(user_email)
+    if not profile:
+        return {"email": user_email, "name": user_name}, "access_requested"
+
+    return profile, "authorized"
+
+
+def view_login():
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        logo_path = "assets/vector/logo_black.png"
+        if os.path.exists(logo_path):
+            st.image(logo_path, width=200)
+        st.title("Portal TWL Obras")
+        st.caption("Acesso reservado a colaboradores e administradores da TWL.")
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Entrar com a conta Google", type="primary", use_container_width=True):
+            st.login("google")
+
+
+def view_pedido_acesso(user_info):
+    email = user_info.get("email", "")
+    nome = user_info.get("name", "")
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        logo_path = "assets/vector/logo_black.png"
+        if os.path.exists(logo_path):
+            st.image(logo_path, width=160)
+        st.title("Acesso Pendente")
+        st.warning(f"Olá **{nome}**! A tua conta Google (**{email}**) ainda não se encontra autorizada no TWL Obras.")
+        st.write("Para teres acesso ao portal, envia a tua solicitação para que o administrador possa ativar o teu perfil.")
+
+        with st.form("form_pedido"):
+            motivo = st.text_input("Cargo / Função", placeholder="Ex: Engenheiro de Obra, Encarregado...")
+            contacto = st.text_input("Contacto telefónico", placeholder="Ex: (+351) 912 345 678")
+            enviado = st.form_submit_button("Enviar Pedido de Acesso", type="primary", use_container_width=True)
+            if enviado:
+                ok, msg = sheets.registrar_pedido_acesso(email, nome, motivo, contacto)
+                if ok:
+                    st.success("O teu pedido foi submetido! O administrador irá ativar o teu perfil.")
+                else:
+                    st.info(msg)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        if hasattr(st, "logout") and getattr(st.user, "is_logged_in", False):
+            if st.button("Terminar sessão / Mudar de conta", use_container_width=True):
+                st.logout()
+
+
+def render_user_header(profile):
+    c_info, c_out = st.columns([8, 2])
+    with c_info:
+        badge = "👑 Admin" if profile.get("role") == "admin" else "👷 Colaborador"
+        st.caption(f"Sessão iniciada como **{profile.get('nome')}** ({profile.get('email')}) — {badge}")
+    with c_out:
+        if hasattr(st, "logout") and getattr(st.user, "is_logged_in", False):
+            if st.button("Terminar sessão", key="btn_logout", use_container_width=True):
+                st.logout()
+
+
+# ---------------------------------------------------------------------------
 # Vista 1 — Dashboard
 # ---------------------------------------------------------------------------
-def view_dashboard():
+def view_dashboard(profile):
+    render_user_header(profile)
     st.title("Obras")
-    obras = sheets.get_obras()
 
+    # Notificações administrativas para Administradores
+    if profile.get("role") == "admin":
+        pedidos = sheets.get_pedidos_acesso()
+        if pedidos:
+            with st.expander(f"🔔 Pedidos de Acesso Pendentes ({len(pedidos)})", expanded=False):
+                st.write("Colaboradores que solicitaram acesso recentemente:")
+                for p in pedidos:
+                    c1, c2, c3 = st.columns([3, 3, 2])
+                    with c1:
+                        st.markdown(f"**{p.get('nome', '')}**<br><small>{p.get('email', '')}</small>", unsafe_allow_html=True)
+                    with c2:
+                        st.caption(f"Função: {p.get('motivo', 'N/D')}")
+                        st.caption(f"Contacto: {p.get('contacto', 'N/D')}")
+                    with c3:
+                        st.caption(f"Data: {p.get('data_pedido', '')}")
+                st.info("Podes adicionar os emails destes colaboradores no separador 'Utilizadores' da Google Sheet.")
+
+    obras = sheets.get_obras()
     if not obras:
         st.info("Sem obras ativas na sheet 'Obras' (ou a coluna 'estado' não tem nenhuma linha = 'ativa').")
         return
@@ -93,7 +197,8 @@ def view_dashboard():
 # ---------------------------------------------------------------------------
 # Vista 2 — Painel de obra
 # ---------------------------------------------------------------------------
-def view_painel():
+def view_painel(profile):
+    render_user_header(profile)
     obra = st.session_state.selected_obra
     if st.button("← Voltar às obras"):
         go_to("dashboard")
@@ -113,7 +218,8 @@ def view_painel():
 # ---------------------------------------------------------------------------
 # Vista 3 — Gerador de RDO
 # ---------------------------------------------------------------------------
-def view_gerar_rdo():
+def view_gerar_rdo(profile):
+    render_user_header(profile)
     obra = st.session_state.selected_obra
     if st.button("← Voltar ao painel de obra"):
         go_to("painel")
@@ -125,7 +231,19 @@ def view_gerar_rdo():
         st.error("Sem responsáveis ativos na sheet 'Responsaveis'.")
         return
     nomes = [r["nome_completo"] for r in responsaveis]
-    resp_nome = st.selectbox("Responsável", nomes)
+
+    # Para funcionários, tenta pré-selecionar o responsável pelo nome
+    default_idx = 0
+    if profile.get("role") == "funcionario":
+        for idx, r in enumerate(responsaveis):
+            if (
+                profile.get("nome", "").strip().lower() in r["nome_completo"].strip().lower()
+                or r["nome_completo"].strip().lower() in profile.get("nome", "").strip().lower()
+            ):
+                default_idx = idx
+                break
+
+    resp_nome = st.selectbox("Responsável", nomes, index=default_idx)
     resp = next(r for r in responsaveis if r["nome_completo"] == resp_nome)
 
     resumo = st.text_area("Resumo das atividades realizadas", height=120,
@@ -207,7 +325,18 @@ def view_gerar_rdo():
 
 
 # ---------------------------------------------------------------------------
-# Router
+# Router Principal
 # ---------------------------------------------------------------------------
-VIEWS = {"dashboard": view_dashboard, "painel": view_painel, "gerar_rdo": view_gerar_rdo}
-VIEWS[st.session_state.view]()
+profile, auth_status = check_authentication()
+
+if auth_status == "login_required":
+    view_login()
+elif auth_status == "access_requested":
+    view_pedido_acesso(profile)
+else:
+    VIEWS = {
+        "dashboard": view_dashboard,
+        "painel": view_painel,
+        "gerar_rdo": view_gerar_rdo,
+    }
+    VIEWS[st.session_state.view](profile)

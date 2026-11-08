@@ -1,0 +1,12 @@
+# Streamlit secrets (NUNCA commitar credenciais)
+.streamlit/secrets.toml
+
+# Ambientes virtuais e cache
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Ficheiros locais do sistema e scripts de setup
+get_oauth_refresh_token.py
+setup_gsheets.py

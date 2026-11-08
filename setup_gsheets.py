@@ -27,6 +27,8 @@ SHEETS = {
     ],
     "Responsaveis": ["nome_completo", "iniciais", "contacto", "ativo"],
     "RDOs": ["id_obra", "data", "responsavel", "referencia"],
+    "Utilizadores": ["email", "nome", "role", "ativo"],
+    "Pedidos_Acesso": ["data_pedido", "email", "nome", "motivo", "contacto", "estado"],
 }
 
 EXEMPLO_OBRA = [
@@ -34,6 +36,7 @@ EXEMPLO_OBRA = [
     "80", "Quiosque de café em contexto de retalho.", "", "ativa",
 ]
 EXEMPLO_RESPONSAVEL = ["Eng.º Guilherme Gonçalves Leal", "GL", "(+351) 961 743 951", "sim"]
+EXEMPLO_UTILIZADOR = ["guilhermeleal.me@gmail.com", "Guilherme Leal", "admin", "sim"]
 
 
 def main():
@@ -65,6 +68,7 @@ def main():
 
     sh.worksheet("Obras").append_row(EXEMPLO_OBRA)
     sh.worksheet("Responsaveis").append_row(EXEMPLO_RESPONSAVEL)
+    sh.worksheet("Utilizadores").append_row(EXEMPLO_UTILIZADOR)
 
     print("\nSpreadsheet criada com sucesso.")
     print("Nome:", sh.title)
