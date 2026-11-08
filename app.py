@@ -48,7 +48,7 @@ st.markdown(
             height: 0 !important;
         }
         
-        /* Ocultar rodapé nativo e banners ('Created by...', 'Hosted with Streamlit') */
+        /* Ocultar rodapé nativo e banners ('Created by...', 'Hosted with Streamlit', viewerBadge) */
         footer {
             display: none !important;
             visibility: hidden !important;
@@ -57,12 +57,23 @@ st.markdown(
         [data-testid="stDecoration"],
         [data-testid="stStatusWidget"],
         [data-testid="stAppDeployButton"],
+        div[class*="viewerBadge"],
+        a[class*="viewerBadge"],
+        span[class*="viewerBadge"],
+        div[class*="StatusWidget"],
+        div[class*="manageApp"],
+        div[id*="manage-app"],
+        button[id*="manage-app"],
         .viewerBadge_container__1QSob,
         .viewerBadge_link__1S137,
-        [class*="viewerBadge"] {
+        .viewerBadge_avatar__1A8G4,
+        .viewerBadge_logo__2gO37 {
             display: none !important;
             visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
             height: 0 !important;
+            width: 0 !important;
         }
         
         /* Remover o padding excessivo do topo e laterais no Streamlit */
@@ -193,8 +204,8 @@ def view_login():
             unsafe_allow_html=True,
         )
 
-        # Espaçamento vertical proporcional e dinâmico (escala perfeitamente em qualquer smartphone)
-        st.markdown("<div style='height: clamp(140px, 28vh, 260px);'></div>", unsafe_allow_html=True)
+        # Espaçamento vertical proporcional — desce o bloco de login para o terço inferior
+        st.markdown("<div style='height: clamp(260px, 46vh, 460px);'></div>", unsafe_allow_html=True)
 
         # Título "Bem vindo,"
         st.markdown(
