@@ -13,6 +13,7 @@ import os
 from zoneinfo import ZoneInfo
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 LISBOA = ZoneInfo("Europe/Lisbon")
 
@@ -41,6 +42,13 @@ st.markdown(
             color: #000000;
         }
         
+        /* Ocultar iframes de componentes invisíveis */
+        iframe[title="streamlit.components.v1.custom_component"] {
+            display: none !important;
+            height: 0 !important;
+            position: absolute !important;
+        }
+
         /* Ocultar cabeçalho nativo do Streamlit (Fork, GitHub, menu sanduíche) */
         header[data-testid="stHeader"] {
             display: none !important;
@@ -132,6 +140,53 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Script para remoção ativa e permanente dos badges do Streamlit Cloud (avatar e coroa)
+components.html(
+    """
+    <script>
+    function removeCloudBadges() {
+        const selectors = [
+            '[data-testid="manage-app-button"]',
+            '#manage-app-button',
+            '.viewerBadge_container__1QSob',
+            '.styles_viewerBadge__1yB5_',
+            '.viewerBadge_link__1S137',
+            '.viewerBadge_text__1JaDK',
+            '[class*="viewerBadge"]',
+            '[class*="StatusWidget"]',
+            '[data-testid="stStatusWidget"]',
+            '[data-testid="stAppDeployButton"]',
+            'footer',
+            'header[data-testid="stHeader"]'
+        ];
+        try {
+            const targets = [document];
+            if (window.parent && window.parent.document) {
+                targets.push(window.parent.document);
+            }
+            targets.forEach(doc => {
+                selectors.forEach(sel => {
+                    const elements = doc.querySelectorAll(sel);
+                    elements.forEach(el => {
+                        el.style.setProperty('display', 'none', 'important');
+                        el.style.setProperty('visibility', 'hidden', 'important');
+                        el.style.setProperty('opacity', '0', 'important');
+                        el.style.setProperty('height', '0px', 'important');
+                        el.style.setProperty('pointer-events', 'none', 'important');
+                        el.remove();
+                    });
+                });
+            });
+        } catch (e) {}
+    }
+    removeCloudBadges();
+    setInterval(removeCloudBadges, 400);
+    </script>
+    """,
+    height=0,
+    width=0,
+)
+
 # ---------------------------------------------------------------------------
 # Estado de navegação
 # ---------------------------------------------------------------------------
@@ -204,8 +259,8 @@ def view_login():
             unsafe_allow_html=True,
         )
 
-        # Espaçamento vertical proporcional — desce o bloco de login para o terço inferior
-        st.markdown("<div style='height: clamp(260px, 46vh, 460px);'></div>", unsafe_allow_html=True)
+        # Espaçamento vertical proporcional — desce o bloco de login diretamente para a parte inferior
+        st.markdown("<div style='height: clamp(300px, 50vh, 540px);'></div>", unsafe_allow_html=True)
 
         # Título "Bem vindo,"
         st.markdown(
