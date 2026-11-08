@@ -158,22 +158,42 @@ def view_dashboard(profile):
     render_user_header(profile)
     st.title("Obras")
 
-    # Notificações administrativas para Administradores
+    # Notificações e Aprovação de Acessos para Administradores
     if profile.get("role") == "admin":
         pedidos = sheets.get_pedidos_acesso()
         if pedidos:
-            with st.expander(f"🔔 Pedidos de Acesso Pendentes ({len(pedidos)})", expanded=False):
+            with st.expander(f"🔔 Pedidos de Acesso Pendentes ({len(pedidos)})", expanded=True):
                 st.write("Colaboradores que solicitaram acesso recentemente:")
-                for p in pedidos:
-                    c1, c2, c3 = st.columns([3, 3, 2])
+                for i, p in enumerate(pedidos):
+                    c1, c2, c3, c4 = st.columns([3, 2, 2, 1.5])
                     with c1:
                         st.markdown(f"**{p.get('nome', '')}**<br><small>{p.get('email', '')}</small>", unsafe_allow_html=True)
+                        if p.get("motivo"):
+                            st.caption(f"Função: {p.get('motivo')}")
+                        if p.get("contacto"):
+                            st.caption(f"Contacto: {p.get('contacto')}")
                     with c2:
-                        st.caption(f"Função: {p.get('motivo', 'N/D')}")
-                        st.caption(f"Contacto: {p.get('contacto', 'N/D')}")
+                        role_sel = st.selectbox(
+                            "Perfil",
+                            ["funcionario", "admin"],
+                            format_func=lambda x: "👷 Funcionário" if x == "funcionario" else "👑 Administrador",
+                            key=f"role_sel_{i}",
+                        )
                     with c3:
-                        st.caption(f"Data: {p.get('data_pedido', '')}")
-                st.info("Podes adicionar os emails destes colaboradores no separador 'Utilizadores' da Google Sheet.")
+                        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+                        if st.button("✅ Aprovar", key=f"aprov_{i}", type="primary", use_container_width=True):
+                            with st.spinner("A aprovar acesso..."):
+                                sheets.aprovar_pedido_acesso(p["email"], p.get("nome", ""), role_sel)
+                            st.success(f"{p['email']} aprovado como {role_sel}!")
+                            st.rerun()
+                    with c4:
+                        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+                        if st.button("Recusar", key=f"rej_{i}", use_container_width=True):
+                            with st.spinner("A recusar..."):
+                                sheets.rejeitar_pedido_acesso(p["email"])
+                            st.info(f"Pedido de {p['email']} recusado.")
+                            st.rerun()
+                    st.divider()
 
     obras = sheets.get_obras()
     if not obras:

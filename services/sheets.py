@@ -139,6 +139,65 @@ def get_pedidos_acesso():
     return [r for r in registos if str(r.get("estado", "")).strip().lower() == "pendente"]
 
 
+def aprovar_pedido_acesso(email: str, nome: str, role: str = "funcionario"):
+    """Aprova um pedido de acesso: adiciona a Utilizadores e atualiza o pedido."""
+    sh = _spreadsheet()
+    ws_pedidos = _get_or_create_worksheet(
+        "Pedidos_Acesso",
+        ["data_pedido", "email", "nome", "motivo", "contacto", "estado"],
+    )
+    ws_users = _get_or_create_worksheet(
+        "Utilizadores",
+        ["email", "nome", "role", "ativo"],
+    )
+
+    # 1. Adicionar ou reativar em Utilizadores
+    users_records = ws_users.get_all_records()
+    found_row = None
+    for idx, u in enumerate(users_records, start=2):
+        if str(u.get("email", "")).strip().lower() == email.strip().lower():
+            found_row = idx
+            break
+
+    if found_row:
+        ws_users.update_cell(found_row, 3, role)
+        ws_users.update_cell(found_row, 4, "sim")
+    else:
+        ws_users.append_row([email.strip().lower(), nome.strip(), role, "sim"])
+
+    # 2. Atualizar estado em Pedidos_Acesso para 'aprovado'
+    pedidos_records = ws_pedidos.get_all_records()
+    for idx, p in enumerate(pedidos_records, start=2):
+        if (
+            str(p.get("email", "")).strip().lower() == email.strip().lower()
+            and str(p.get("estado", "")).strip().lower() == "pendente"
+        ):
+            ws_pedidos.update_cell(idx, 6, "aprovado")
+            break
+
+    clear_cache()
+    return True
+
+
+def rejeitar_pedido_acesso(email: str):
+    """Marca o pedido de acesso como rejeitado."""
+    ws_pedidos = _get_or_create_worksheet(
+        "Pedidos_Acesso",
+        ["data_pedido", "email", "nome", "motivo", "contacto", "estado"],
+    )
+    pedidos_records = ws_pedidos.get_all_records()
+    for idx, p in enumerate(pedidos_records, start=2):
+        if (
+            str(p.get("email", "")).strip().lower() == email.strip().lower()
+            and str(p.get("estado", "")).strip().lower() == "pendente"
+        ):
+            ws_pedidos.update_cell(idx, 6, "rejeitado")
+            break
+
+    clear_cache()
+    return True
+
+
 def clear_cache():
     """Chamar depois de qualquer alteração manual na sheet, para forçar refresh."""
     get_obras.clear()
