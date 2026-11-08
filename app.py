@@ -22,20 +22,67 @@ from services.pdf_generator import generate_rdo_pdf
 st.set_page_config(page_title="TWL Obras", page_icon="⬛", layout="wide")
 
 # ---------------------------------------------------------------------------
-# Estilo — clean, minimalista, preto/branco/cinza
+# Estilo — clean, minimalista, preto/branco/cinza (Identidade TWL)
 # ---------------------------------------------------------------------------
 st.markdown(
     """
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display&display=swap');
-        html, body, [class*="css"]  { font-family: 'Inter', sans-serif; }
-        h1, h2, h3 { font-family: 'Playfair Display', serif; font-weight: 400; }
-        div.stButton > button {
-            border-radius: 0; border: 1px solid #111; background: #fff; color: #111;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+        
+        html, body, [class*="css"], .stApp {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
         }
-        div.stButton > button:hover { background: #111; color: #fff; }
-        div.stButton > button[kind="primary"] { background: #111; color: #fff; border: 1px solid #111; }
-        .obra-card { border: 1px solid #e2e2e2; padding: 1rem; margin-bottom: 1rem; }
+        
+        h1, h2, h3 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-weight: 400;
+            color: #000000;
+        }
+        
+        /* Botões em formato Pílula (Pill Buttons) */
+        div.stButton > button {
+            border-radius: 9999px !important;
+            height: 44px !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            padding: 0.5rem 1.5rem !important;
+            transition: all 0.2s ease !important;
+            box-shadow: none !important;
+        }
+        
+        /* Botão Primário — Preto sólido */
+        div.stButton > button[kind="primary"] {
+            background-color: #010101 !important;
+            color: #ffffff !important;
+            border: 1px solid #010101 !important;
+        }
+        div.stButton > button[kind="primary"]:hover {
+            background-color: #222222 !important;
+            color: #ffffff !important;
+            border-color: #222222 !important;
+        }
+        
+        /* Botão Secundário — Cinzento suave */
+        div.stButton > button[kind="secondary"] {
+            background-color: #e6e6e6 !important;
+            color: #000000 !important;
+            border: 1px solid #e6e6e6 !important;
+        }
+        div.stButton > button[kind="secondary"]:hover {
+            background-color: #d8d8d8 !important;
+            color: #000000 !important;
+            border-color: #d8d8d8 !important;
+        }
+        
+        .obra-card {
+            border: 1px solid #e2e2e2;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+        }
     </style>
     """,
     unsafe_allow_html=True,
@@ -96,32 +143,84 @@ def check_authentication():
 
 
 def view_login():
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("<br><br>", unsafe_allow_html=True)
+    # Centralização responsiva (Mobile-first, max-width 390px centrado em telas maiores)
+    _, col_center, _ = st.columns([1, 1.6, 1])
+    with col_center:
+        # Topo: Logo TWL alinhado à esquerda
         logo_path = "assets/vector/logo_black.png"
         if os.path.exists(logo_path):
-            st.image(logo_path, width=200)
-        st.title("Portal TWL Obras")
-        st.caption("Acesso reservado a colaboradores e administradores da TWL.")
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Entrar com a conta Google", type="primary", use_container_width=True):
+            st.image(logo_path, width=95)
+
+        # Espaçamento vertical generoso (fidelidade ao canvas Inkscape)
+        st.markdown("<div style='height: 180px;'></div>", unsafe_allow_html=True)
+
+        # Título "Bem vindo,"
+        st.markdown(
+            """
+            <h1 style='font-family: "Playfair Display", Georgia, serif; 
+                       font-size: 34px; 
+                       font-weight: 400; 
+                       color: #000000; 
+                       margin-bottom: 24px; 
+                       line-height: 1.15;
+                       letter-spacing: -0.5px;'>
+                Bem vindo,
+            </h1>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # Botão Primário: "Entre com a sua conta Google"
+        if st.button("Entre com a sua conta Google", type="primary", use_container_width=True, key="btn_login_google"):
             st.login()
+
+        # Botão Secundário: "Cadastre-se"
+        if st.button("Cadastre-se", key="btn_cadastre_se", type="secondary", use_container_width=True):
+            st.session_state["show_cadastro_info"] = not st.session_state.get("show_cadastro_info", False)
+
+        if st.session_state.get("show_cadastro_info"):
+            st.info("Para solicitar o seu cadastro, clique em **Entre com a sua conta Google**. O seu pedido será enviado automaticamente para aprovação do Administrador.")
+            if st.button("Avançar para Login Google", type="primary", use_container_width=True, key="btn_cad_login"):
+                st.login()
+
+        # Rodapé com assinatura institucional
+        st.markdown(
+            """
+            <p style='font-family: "Inter", sans-serif; 
+                      font-size: 9px; 
+                      color: #a1a1a1; 
+                      text-align: center; 
+                      margin-top: 55px; 
+                      margin-bottom: 20px;
+                      letter-spacing: 0.2px;'>
+                TWL Portugal - Engenharia e Construção
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def view_pedido_acesso(user_info):
     email = user_info.get("email", "")
     nome = user_info.get("name", "")
 
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
+    _, col_center, _ = st.columns([1, 1.6, 1])
+    with col_center:
         logo_path = "assets/vector/logo_black.png"
         if os.path.exists(logo_path):
-            st.image(logo_path, width=160)
-        st.title("Acesso Pendente")
+            st.image(logo_path, width=95)
+
+        st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+        st.markdown(
+            """
+            <h1 style='font-family: "Playfair Display", Georgia, serif; font-size: 28px; font-weight: 400; color: #000000; margin-bottom: 12px;'>
+                Acesso Pendente
+            </h1>
+            """,
+            unsafe_allow_html=True,
+        )
         st.warning(f"Olá **{nome}**! A tua conta Google (**{email}**) ainda não se encontra autorizada no TWL Obras.")
-        st.write("Para teres acesso ao portal, envia a tua solicitação para que o administrador possa ativar o teu perfil.")
+        st.caption("Para teres acesso ao portal, envia a tua solicitação para que o administrador possa ativar o teu perfil.")
 
         with st.form("form_pedido"):
             motivo = st.text_input("Cargo / Função", placeholder="Ex: Engenheiro de Obra, Encarregado...")
@@ -136,8 +235,23 @@ def view_pedido_acesso(user_info):
 
         st.markdown("<br>", unsafe_allow_html=True)
         if hasattr(st, "logout") and getattr(st.user, "is_logged_in", False):
-            if st.button("Terminar sessão / Mudar de conta", use_container_width=True):
+            if st.button("Terminar sessão / Mudar de conta", type="secondary", use_container_width=True):
                 st.logout()
+
+        st.markdown(
+            """
+            <p style='font-family: "Inter", sans-serif; 
+                      font-size: 9px; 
+                      color: #a1a1a1; 
+                      text-align: center; 
+                      margin-top: 40px; 
+                      margin-bottom: 20px;
+                      letter-spacing: 0.2px;'>
+                TWL Portugal - Engenharia e Construção
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def render_user_header(profile):
