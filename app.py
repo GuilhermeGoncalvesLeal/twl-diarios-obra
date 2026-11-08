@@ -41,6 +41,39 @@ st.markdown(
             color: #000000;
         }
         
+        /* Ocultar cabeçalho nativo do Streamlit (Fork, GitHub, menu sanduíche) */
+        header[data-testid="stHeader"] {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+        }
+        
+        /* Ocultar rodapé nativo e banners ('Created by...', 'Hosted with Streamlit') */
+        footer {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        [data-testid="stToolbar"],
+        [data-testid="stDecoration"],
+        [data-testid="stStatusWidget"],
+        [data-testid="stAppDeployButton"],
+        .viewerBadge_container__1QSob,
+        .viewerBadge_link__1S137,
+        [class*="viewerBadge"] {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+        }
+        
+        /* Remover o padding excessivo do topo e laterais no Streamlit */
+        .block-container {
+            padding-top: 1.2rem !important;
+            padding-bottom: 0.5rem !important;
+            padding-left: 1.2rem !important;
+            padding-right: 1.2rem !important;
+            max-width: 100% !important;
+        }
+
         /* Botões em formato Pílula (Pill Buttons) */
         div.stButton > button {
             border-radius: 9999px !important;
@@ -146,13 +179,22 @@ def view_login():
     # Centralização responsiva (Mobile-first, max-width 390px centrado em telas maiores)
     _, col_center, _ = st.columns([1, 1.6, 1])
     with col_center:
-        # Topo: Logo TWL alinhado à esquerda
-        logo_path = "assets/vector/logo_black.png"
-        if os.path.exists(logo_path):
-            st.image(logo_path, width=95)
+        # Topo: Logo TWL em SVG vetorial de resolução infinita (100% nítido em qualquer ecrã)
+        st.markdown(
+            """
+            <div style="display: flex; justify-content: flex-start; align-items: center; margin-top: 0px; margin-bottom: 0px;">
+                <svg viewBox="210 220 417.3205 142.92329" style="width: 82px; height: auto; display: block;">
+                    <g transform="matrix(1,0,0,-1,-2.2849,589.0997)">
+                        <path fill="#000000" fill-rule="evenodd" d="m 391.9175,369.0992 h 48.3404 c 2.8023,0 5.2274,-1.6143 6.3972,-3.9634 l 31.3305,-65.1895 c 0.398,-0.7582 1.1928,-1.2761 2.109,-1.2761 0.9686,0 1.8023,0.5785 2.1736,1.4094 l 33.1753,69.0196 c 4.6131,0 9.2267,0 13.8398,0 l -68.6831,-142.9228 -36.9834,76.9578 c -12.3279,-25.6536 -24.6546,-51.3043 -36.9825,-76.9578 l -68.6832,142.9228 h 48.3404 c 2.812,0 5.2441,-1.6248 6.4091,-3.9875 l 31.3172,-65.1588 c 0.3917,-0.7835 1.2427,-1.2827 2.1121,-1.2827 0.9689,0 1.8023,0.5785 2.1736,1.4094 l 8.3931,17.4554 z m 151.7508,-131.9269 49.0147,-0.001 5.283,-10.9944 h -58.8192 c -2.727,0 -5.1701,1.4309 -6.429,3.8639 l -24.5679,51.1067 40.347,83.9556 c 1.1627,2.3675 3.598,3.9966 6.4133,3.9966 h 48.3395 L 541.5134,240.6293 c -0.7625,-1.6123 0.3331,-3.4838 2.1549,-3.4565 z m -326.1002,120.9325 -5.2832,10.9944 h 80.0396 c 2.8024,0 5.2699,-1.6007 6.4724,-4.1193 L 339.0843,281.147 312.6677,226.1764 250.596,355.3415 c -0.7551,1.6319 -2.4066,2.7635 -4.3226,2.7635 z m 402.4644,10.9944 c 5.2869,0 9.5729,-4.286 9.5729,-9.5729 0,-5.2866 -4.286,-9.5723 -9.5729,-9.5723 -5.2866,0 -9.5726,4.2857 -9.5726,9.5723 0,5.2869 4.286,9.5729 9.5726,9.5729" />
+                    </g>
+                </svg>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        # Espaçamento vertical generoso (fidelidade ao canvas Inkscape)
-        st.markdown("<div style='height: 180px;'></div>", unsafe_allow_html=True)
+        # Espaçamento vertical proporcional e dinâmico (escala perfeitamente em qualquer smartphone)
+        st.markdown("<div style='height: clamp(140px, 28vh, 260px);'></div>", unsafe_allow_html=True)
 
         # Título "Bem vindo,"
         st.markdown(
@@ -190,8 +232,8 @@ def view_login():
                       font-size: 9px; 
                       color: #a1a1a1; 
                       text-align: center; 
-                      margin-top: 55px; 
-                      margin-bottom: 20px;
+                      margin-top: clamp(35px, 7vh, 60px); 
+                      margin-bottom: 10px;
                       letter-spacing: 0.2px;'>
                 TWL Portugal - Engenharia e Construção
             </p>
