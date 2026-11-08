@@ -106,7 +106,7 @@ def view_login():
         st.caption("Acesso reservado a colaboradores e administradores da TWL.")
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Entrar com a conta Google", type="primary", use_container_width=True):
-            st.login("google")
+            st.login()
 
 
 def view_pedido_acesso(user_info):
