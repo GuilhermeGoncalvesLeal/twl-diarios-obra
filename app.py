@@ -335,100 +335,202 @@ def view_menu_principal(profile):
     nome = profile.get("nome", "Utilizador")
     foto_url = ""
 
-    # Se o utilizador autenticou via Google, usamos a foto do Google
+    # Foto do perfil via Google OAuth
     if hasattr(st, "user") and getattr(st.user, "is_logged_in", False):
         foto_url = getattr(st.user, "picture", "") or ""
 
-    _, col_center, _ = st.columns([1, 1.6, 1])
-    with col_center:
-        # --- Cabeçalho: Saudação + Foto ---
-        saudacao = _saudacao()
+    # CSS dedicado para fidelidade a 100% ao design Inkscape (Mobile-first 390x844)
+    st.markdown(
+        """
+        <style>
+            /* Centralização e contenção de largura no ecrã (390px responsivo) */
+            @media (min-width: 480px) {
+                .main .block-container {
+                    max-width: 420px !important;
+                    margin-left: auto !important;
+                    margin-right: auto !important;
+                    padding-left: 16px !important;
+                    padding-right: 16px !important;
+                }
+            }
+            @media (max-width: 479px) {
+                .main .block-container {
+                    max-width: 100% !important;
+                    padding-left: 20px !important;
+                    padding-right: 20px !important;
+                    padding-top: 24px !important;
+                    padding-bottom: 24px !important;
+                }
+            }
 
-        if foto_url:
-            header_html = f"""
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 4px; margin-bottom: 0;">
-                <div style="flex: 1;">
-                    <h1 style='font-family: "Playfair Display", Georgia, serif;
-                               font-size: 32px; font-weight: 500;
-                               color: #000000; margin: 0; line-height: 1.15;
-                               letter-spacing: -0.5px;'>
-                        {saudacao}
-                    </h1>
-                    <p style='font-family: "Playfair Display", Georgia, serif;
-                              font-size: 32px; font-weight: 400;
-                              color: #b0b0b0; margin: 0; line-height: 1.15;
-                              letter-spacing: -0.5px;'>
-                        {nome}.
-                    </p>
-                </div>
-                <img src="{foto_url}"
-                     style="width: 56px; height: 56px; border-radius: 50%;
-                            object-fit: cover; margin-left: 16px; margin-top: 4px;"
-                     alt="Foto de perfil"
-                     referrerpolicy="no-referrer" />
-            </div>
-            """
-        else:
-            header_html = f"""
-            <div style="margin-top: 4px; margin-bottom: 0;">
-                <h1 style='font-family: "Playfair Display", Georgia, serif;
-                           font-size: 32px; font-weight: 500;
-                           color: #000000; margin: 0; line-height: 1.15;
-                           letter-spacing: -0.5px;'>
-                    {saudacao}
-                </h1>
-                <p style='font-family: "Playfair Display", Georgia, serif;
-                          font-size: 32px; font-weight: 400;
-                          color: #b0b0b0; margin: 0; line-height: 1.15;
-                          letter-spacing: -0.5px;'>
-                    {nome}.
-                </p>
-            </div>
-            """
+            /* Forçar as 3 colunas a ficarem SEMPRE em linha horizontal (1x3) sem quebrar no mobile */
+            div[data-testid="stHorizontalBlock"]:has(.st-key-btn_menu_obras) {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                gap: 11px !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
 
-        st.markdown(header_html, unsafe_allow_html=True)
+            div[data-testid="stHorizontalBlock"]:has(.st-key-btn_menu_obras) > div[data-testid="column"] {
+                flex: 1 1 0% !important;
+                min-width: 0 !important;
+                width: calc((100% - 22px) / 3) !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
 
-        # --- Espaçamento vertical até ao centro-baixo ---
-        st.markdown("<div style='height: clamp(200px, 38vh, 380px);'></div>", unsafe_allow_html=True)
+            div[data-testid="stHorizontalBlock"]:has(.st-key-btn_menu_obras) div[data-testid="stElementContainer"],
+            div[data-testid="stHorizontalBlock"]:has(.st-key-btn_menu_obras) div.stButton {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
 
-        # --- 3 Cartões de ação (Obras, Reembolsos, Informações) ---
-        c1, c2, c3 = st.columns(3, gap="small")
+            /* Os botões Streamlit tornam-se os cartões quadrados (109x109) do Inkscape */
+            .st-key-btn_menu_obras button,
+            .st-key-btn_menu_reembolsos button,
+            .st-key-btn_menu_info button {
+                background-color: #e6e6e6 !important;
+                color: #000000 !important;
+                border: none !important;
+                border-radius: 18px !important;
+                width: 100% !important;
+                height: 106px !important;
+                min-height: 106px !important;
+                max-height: 106px !important;
+                aspect-ratio: 1 / 1 !important;
+                box-shadow: none !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+                padding: 4px !important;
+                margin: 0 !important;
+                cursor: pointer !important;
+                transition: background-color 0.15s ease, transform 0.1s ease !important;
+            }
 
-        for col, label, view_key in [
-            (c1, "Obras", "dashboard"),
-            (c2, "Reembolsos", "reembolsos"),
-            (c3, "Informações", "informacoes"),
-        ]:
-            with col:
-                st.markdown(
-                    f"""
-                    <div style="background-color: #f0f0f0; border-radius: 16px;
-                                height: 120px; display: flex; align-items: flex-end;
-                                padding: 14px;">
-                        <span style="font-family: 'Inter', sans-serif; font-size: 13px;
-                                     font-weight: 500; color: #000;">{label}</span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                if st.button(label, key=f"menu_{view_key}", type="secondary",
-                              use_container_width=True):
-                    go_to(view_key)
+            .st-key-btn_menu_obras button:hover,
+            .st-key-btn_menu_reembolsos button:hover,
+            .st-key-btn_menu_info button:hover {
+                background-color: #dedede !important;
+                color: #000000 !important;
+                border: none !important;
+                transform: translateY(-2px) !important;
+            }
 
-        # Rodapé institucional
-        st.markdown(
-            """
-            <p style='font-family: "Inter", sans-serif;
-                      font-size: 9px; color: #a1a1a1;
-                      text-align: center;
-                      margin-top: clamp(60px, 14vh, 140px);
-                      margin-bottom: 10px;
-                      letter-spacing: 0.2px;'>
-                TWL Portugal - Engenharia e Construção
+            .st-key-btn_menu_obras button:active,
+            .st-key-btn_menu_reembolsos button:active,
+            .st-key-btn_menu_info button:active {
+                background-color: #d4d4d4 !important;
+                border: none !important;
+                transform: translateY(0) !important;
+            }
+
+            .st-key-btn_menu_obras button:focus,
+            .st-key-btn_menu_reembolsos button:focus,
+            .st-key-btn_menu_info button:focus {
+                border: none !important;
+                outline: none !important;
+                box-shadow: none !important;
+            }
+
+            /* Tipografia interna dos cartões (Inter 13px medium, centrada) */
+            .st-key-btn_menu_obras button p,
+            .st-key-btn_menu_reembolsos button p,
+            .st-key-btn_menu_info button p {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+                font-size: 13px !important;
+                font-weight: 500 !important;
+                color: #000000 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                line-height: 1.2 !important;
+                text-align: center !important;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # --- 1. Cabeçalho: Saudação + Nome + Foto de Perfil ---
+    saudacao = _saudacao()
+
+    if foto_url:
+        foto_html = f"""<img src="{foto_url}"
+                             style="width: 52px; height: 52px; border-radius: 50%;
+                                    object-fit: cover; display: block;"
+                             alt="Foto de perfil"
+                             referrerpolicy="no-referrer" />"""
+    else:
+        inicial = nome[0].upper() if nome else "U"
+        foto_html = f"""<div style="width: 52px; height: 52px; border-radius: 50%;
+                                    background-color: #e6e6e6; display: flex;
+                                    align-items: center; justify-content: center;
+                                    font-family: 'Playfair Display', Georgia, serif;
+                                    font-size: 22px; color: #000000;">
+                            {inicial}
+                        </div>"""
+
+    header_html = f"""
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 0; padding-top: 4px;">
+        <div>
+            <h1 style='font-family: "Playfair Display", Georgia, serif;
+                       font-size: 32px; font-weight: 400;
+                       color: #000000; margin: 0; padding: 0;
+                       line-height: 1.12; letter-spacing: -0.5px;'>
+                {saudacao}
+            </h1>
+            <p style='font-family: "Playfair Display", Georgia, serif;
+                      font-size: 32px; font-weight: 400;
+                      color: #dcdcdc; margin: 0; padding: 0;
+                      line-height: 1.12; letter-spacing: -0.5px;'>
+                {nome}.
             </p>
-            """,
-            unsafe_allow_html=True,
-        )
+        </div>
+        <div style="margin-top: 2px;">
+            {foto_html}
+        </div>
+    </div>
+    """
+    st.markdown(header_html, unsafe_allow_html=True)
+
+    # --- 2. Espaçamento vertical proporcional até ao centro (conforme Inkscape: ~31vh) ---
+    st.markdown("<div style='height: clamp(170px, 30vh, 270px);'></div>", unsafe_allow_html=True)
+
+    # --- 3. Três Botões de Ação em Grelha Horizontal 1x3 ---
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        if st.button("Obras", key="btn_menu_obras", use_container_width=True):
+            go_to("dashboard")
+
+    with c2:
+        if st.button("Reembolsos", key="btn_menu_reembolsos", use_container_width=True):
+            go_to("reembolsos")
+
+    with c3:
+        if st.button("Informações", key="btn_menu_info", use_container_width=True):
+            go_to("informacoes")
+
+    # --- 4. Rodapé Institucional TWL (conforme Inkscape) ---
+    st.markdown(
+        """
+        <p style='font-family: "Inter", sans-serif;
+                  font-size: 9px;
+                  color: #a1a1a1;
+                  text-align: center;
+                  margin-top: clamp(190px, 34vh, 310px);
+                  margin-bottom: 20px;
+                  letter-spacing: 0.2px;'>
+            TWL Portugal - Engenharia e Construção
+        </p>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # ---------------------------------------------------------------------------
