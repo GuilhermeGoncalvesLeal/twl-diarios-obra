@@ -135,7 +135,7 @@ st.markdown(
 # ---------------------------------------------------------------------------
 # Estado de navegação
 # ---------------------------------------------------------------------------
-st.session_state.setdefault("view", "dashboard")
+st.session_state.setdefault("view", "menu_principal")
 st.session_state.setdefault("selected_obra", None)
 st.session_state.setdefault("rdo_photos", [])
 st.session_state.setdefault("camera_shot_count", 0)
@@ -319,10 +319,147 @@ def render_user_header(profile):
 
 
 # ---------------------------------------------------------------------------
-# Vista 1 — Dashboard
+# Vista 0 — Menu Principal (saudação + 3 botões de ação)
+# ---------------------------------------------------------------------------
+def _saudacao():
+    """Retorna saudação com base na hora de Lisboa."""
+    hora = datetime.now(LISBOA).hour
+    if hora < 13:
+        return "Bom dia,"
+    elif hora < 20:
+        return "Boa tarde,"
+    return "Boa noite,"
+
+
+def view_menu_principal(profile):
+    nome = profile.get("nome", "Utilizador")
+    foto_url = ""
+
+    # Se o utilizador autenticou via Google, usamos a foto do Google
+    if hasattr(st, "user") and getattr(st.user, "is_logged_in", False):
+        foto_url = getattr(st.user, "picture", "") or ""
+
+    _, col_center, _ = st.columns([1, 1.6, 1])
+    with col_center:
+        # --- Cabeçalho: Saudação + Foto ---
+        saudacao = _saudacao()
+
+        if foto_url:
+            header_html = f"""
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 4px; margin-bottom: 0;">
+                <div style="flex: 1;">
+                    <h1 style='font-family: "Playfair Display", Georgia, serif;
+                               font-size: 32px; font-weight: 500;
+                               color: #000000; margin: 0; line-height: 1.15;
+                               letter-spacing: -0.5px;'>
+                        {saudacao}
+                    </h1>
+                    <p style='font-family: "Playfair Display", Georgia, serif;
+                              font-size: 32px; font-weight: 400;
+                              color: #b0b0b0; margin: 0; line-height: 1.15;
+                              letter-spacing: -0.5px;'>
+                        {nome}.
+                    </p>
+                </div>
+                <img src="{foto_url}"
+                     style="width: 56px; height: 56px; border-radius: 50%;
+                            object-fit: cover; margin-left: 16px; margin-top: 4px;"
+                     alt="Foto de perfil"
+                     referrerpolicy="no-referrer" />
+            </div>
+            """
+        else:
+            header_html = f"""
+            <div style="margin-top: 4px; margin-bottom: 0;">
+                <h1 style='font-family: "Playfair Display", Georgia, serif;
+                           font-size: 32px; font-weight: 500;
+                           color: #000000; margin: 0; line-height: 1.15;
+                           letter-spacing: -0.5px;'>
+                    {saudacao}
+                </h1>
+                <p style='font-family: "Playfair Display", Georgia, serif;
+                          font-size: 32px; font-weight: 400;
+                          color: #b0b0b0; margin: 0; line-height: 1.15;
+                          letter-spacing: -0.5px;'>
+                    {nome}.
+                </p>
+            </div>
+            """
+
+        st.markdown(header_html, unsafe_allow_html=True)
+
+        # --- Espaçamento vertical até ao centro-baixo ---
+        st.markdown("<div style='height: clamp(200px, 38vh, 380px);'></div>", unsafe_allow_html=True)
+
+        # --- 3 Cartões de ação (Obras, Reembolsos, Informações) ---
+        c1, c2, c3 = st.columns(3, gap="small")
+
+        for col, label, view_key in [
+            (c1, "Obras", "dashboard"),
+            (c2, "Reembolsos", "reembolsos"),
+            (c3, "Informações", "informacoes"),
+        ]:
+            with col:
+                st.markdown(
+                    f"""
+                    <div style="background-color: #f0f0f0; border-radius: 16px;
+                                height: 120px; display: flex; align-items: flex-end;
+                                padding: 14px;">
+                        <span style="font-family: 'Inter', sans-serif; font-size: 13px;
+                                     font-weight: 500; color: #000;">{label}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+                if st.button(label, key=f"menu_{view_key}", type="secondary",
+                              use_container_width=True):
+                    go_to(view_key)
+
+        # Rodapé institucional
+        st.markdown(
+            """
+            <p style='font-family: "Inter", sans-serif;
+                      font-size: 9px; color: #a1a1a1;
+                      text-align: center;
+                      margin-top: clamp(60px, 14vh, 140px);
+                      margin-bottom: 10px;
+                      letter-spacing: 0.2px;'>
+                TWL Portugal - Engenharia e Construção
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+# ---------------------------------------------------------------------------
+# Vista — Reembolsos (placeholder)
+# ---------------------------------------------------------------------------
+def view_reembolsos(profile):
+    render_user_header(profile)
+    if st.button("← Voltar ao menu"):
+        go_to("menu_principal")
+    st.title("Reembolsos")
+    st.info("Esta secção será desenvolvida em breve. Aqui poderás submeter e consultar reembolsos de despesas.")
+
+
+# ---------------------------------------------------------------------------
+# Vista — Informações (placeholder)
+# ---------------------------------------------------------------------------
+def view_informacoes(profile):
+    render_user_header(profile)
+    if st.button("← Voltar ao menu"):
+        go_to("menu_principal")
+    st.title("Informações")
+    st.info("Esta secção será desenvolvida em breve. Aqui encontrarás informações da empresa, documentos e contactos.")
+
+
+# ---------------------------------------------------------------------------
+# Vista 1 — Dashboard (lista de Obras)
 # ---------------------------------------------------------------------------
 def view_dashboard(profile):
     render_user_header(profile)
+    if st.button("← Voltar ao menu"):
+        go_to("menu_principal")
     st.title("Obras")
 
     # Notificações e Aprovação de Acessos para Administradores
@@ -522,7 +659,10 @@ elif auth_status == "access_requested":
     view_pedido_acesso(profile)
 else:
     VIEWS = {
+        "menu_principal": view_menu_principal,
         "dashboard": view_dashboard,
+        "reembolsos": view_reembolsos,
+        "informacoes": view_informacoes,
         "painel": view_painel,
         "gerar_rdo": view_gerar_rdo,
     }
