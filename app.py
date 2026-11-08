@@ -21,97 +21,6 @@ from services.pdf_generator import generate_rdo_pdf
 
 st.set_page_config(page_title="TWL Obras", page_icon="⬛", layout="wide")
 
-
-def hide_streamlit_branding():
-    """
-    Oculta barra superior, menu, rodapé, botão de deploy e emblemas da Streamlit Community Cloud.
-    """
-    st.markdown(
-        """
-        <style>
-            /* Ocultar cabeçalho, menu principal, rodapé e barra de ferramentas nativa */
-            #MainMenu {visibility: hidden !important; display: none !important;}
-            header {visibility: hidden !important; display: none !important;}
-            footer {visibility: hidden !important; display: none !important;}
-            [data-testid="stHeader"] {display: none !important;}
-            [data-testid="stToolbar"] {display: none !important;}
-            [data-testid="stDecoration"] {display: none !important;}
-            [data-testid="stStatusWidget"] {display: none !important;}
-            [data-testid="stAppDeployButton"] {display: none !important;}
-            .stDeployButton {display: none !important;}
-
-            /* Ocultar emblemas da Streamlit Cloud e avatar do criador */
-            [class^="viewerBadge_"],
-            [class*="viewerBadge_"],
-            .viewerBadge_container__1QSob,
-            .viewerBadge_link__1S137,
-            .styles_viewerBadge__1yB5_,
-            div[class*="viewerBadge"],
-            a[class*="viewerBadge"],
-            span[class*="viewerBadge"],
-            button[class*="viewerBadge"],
-            div[class*="ProfileBadge"],
-            div[class*="floatingProfileBadge"],
-            [data-testid="manage-app-button"],
-            #manage-app-button,
-            .viewerBadge_avatar__1A8G4,
-            .viewerBadge_logo__2gO37 {
-                display: none !important;
-                visibility: hidden !important;
-                opacity: 0 !important;
-                pointer-events: none !important;
-                height: 0 !important;
-                width: 0 !important;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-    import streamlit.components.v1 as components
-    components.html(
-        """
-        <script>
-            try {
-                const doc = window.parent.document;
-                const style = doc.createElement('style');
-                style.textContent = `
-                    #MainMenu {visibility: hidden !important; display: none !important;}
-                    header {visibility: hidden !important; display: none !important;}
-                    footer {visibility: hidden !important; display: none !important;}
-                    [data-testid="stHeader"] {display: none !important;}
-                    [data-testid="stToolbar"] {display: none !important;}
-                    [data-testid="stDecoration"] {display: none !important;}
-                    [data-testid="stStatusWidget"] {display: none !important;}
-                    [data-testid="stAppDeployButton"] {display: none !important;}
-                    .stDeployButton {display: none !important;}
-                    [class^="viewerBadge_"],
-                    [class*="viewerBadge_"],
-                    .viewerBadge_container__1QSob,
-                    .viewerBadge_link__1S137,
-                    .styles_viewerBadge__1yB5_,
-                    div[class*="viewerBadge"],
-                    a[class*="viewerBadge"],
-                    span[class*="viewerBadge"],
-                    button[class*="viewerBadge"],
-                    div[class*="ProfileBadge"],
-                    div[class*="floatingProfileBadge"],
-                    [data-testid="manage-app-button"],
-                    #manage-app-button {
-                        display: none !important;
-                        visibility: hidden !important;
-                    }
-                `;
-                doc.head.appendChild(style);
-            } catch(e) {}
-        </script>
-        """,
-        height=0,
-        width=0,
-    )
-
-
-hide_streamlit_branding()
-
 # ---------------------------------------------------------------------------
 # Estilo — clean, minimalista, preto/branco/cinza (Identidade TWL)
 # ---------------------------------------------------------------------------
@@ -284,7 +193,7 @@ def view_login():
         # Topo: Logo TWL em SVG vetorial de resolução infinita (100% nítido em qualquer ecrã)
         st.markdown(
             """
-            <div style="display: flex; justify-content: flex-start; align-items: center; margin-top: -8px; margin-bottom: 0px;">
+            <div style="display: flex; justify-content: flex-start; align-items: center; margin-top: 0px; margin-bottom: 0px;">
                 <svg viewBox="210 220 417.3205 142.92329" style="width: 82px; height: auto; display: block;">
                     <g transform="matrix(1,0,0,-1,-2.2849,589.0997)">
                         <path fill="#000000" fill-rule="evenodd" d="m 391.9175,369.0992 h 48.3404 c 2.8023,0 5.2274,-1.6143 6.3972,-3.9634 l 31.3305,-65.1895 c 0.398,-0.7582 1.1928,-1.2761 2.109,-1.2761 0.9686,0 1.8023,0.5785 2.1736,1.4094 l 33.1753,69.0196 c 4.6131,0 9.2267,0 13.8398,0 l -68.6831,-142.9228 -36.9834,76.9578 c -12.3279,-25.6536 -24.6546,-51.3043 -36.9825,-76.9578 l -68.6832,142.9228 h 48.3404 c 2.812,0 5.2441,-1.6248 6.4091,-3.9875 l 31.3172,-65.1588 c 0.3917,-0.7835 1.2427,-1.2827 2.1121,-1.2827 0.9689,0 1.8023,0.5785 2.1736,1.4094 l 8.3931,17.4554 z m 151.7508,-131.9269 49.0147,-0.001 5.283,-10.9944 h -58.8192 c -2.727,0 -5.1701,1.4309 -6.429,3.8639 l -24.5679,51.1067 40.347,83.9556 c 1.1627,2.3675 3.598,3.9966 6.4133,3.9966 h 48.3395 L 541.5134,240.6293 c -0.7625,-1.6123 0.3331,-3.4838 2.1549,-3.4565 z m -326.1002,120.9325 -5.2832,10.9944 h 80.0396 c 2.8024,0 5.2699,-1.6007 6.4724,-4.1193 L 339.0843,281.147 312.6677,226.1764 250.596,355.3415 c -0.7551,1.6319 -2.4066,2.7635 -4.3226,2.7635 z m 402.4644,10.9944 c 5.2869,0 9.5729,-4.286 9.5729,-9.5729 0,-5.2866 -4.286,-9.5723 -9.5729,-9.5723 -5.2866,0 -9.5726,4.2857 -9.5726,9.5723 0,5.2869 4.286,9.5729 9.5726,9.5729" />
@@ -296,18 +205,18 @@ def view_login():
         )
 
         # Espaçamento vertical proporcional — desce o bloco de login para o terço inferior
-        st.markdown("<div style='height: clamp(320px, 57vh, 540px);'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: clamp(260px, 46vh, 460px);'></div>", unsafe_allow_html=True)
 
         # Título "Bem vindo,"
         st.markdown(
             """
             <h1 style='font-family: "Playfair Display", Georgia, serif; 
-                        font-size: 34px; 
-                        font-weight: 400; 
-                        color: #000000; 
-                        margin-bottom: 24px; 
-                        line-height: 1.15;
-                        letter-spacing: -0.5px;'>
+                       font-size: 34px; 
+                       font-weight: 400; 
+                       color: #000000; 
+                       margin-bottom: 24px; 
+                       line-height: 1.15;
+                       letter-spacing: -0.5px;'>
                 Bem vindo,
             </h1>
             """,
